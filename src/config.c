@@ -39,6 +39,7 @@
 #include "scrcapt.h"
 #include "vidmode.h"
 #include "music_player.h"
+#include "thing_navigate.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,6 +51,9 @@ unsigned short AtmosRepeat = 1013;
 unsigned short AtmosStart = 1014;
 unsigned short AtmosEnd = 1034;
 TbBool AssignCpuKeepers = 0;
+unsigned short LevelStartAngle = 256;
+TbBool PossessAffectCamera = true;
+int IsometricTilt = -266;
 
 /**
  * Language 3-char abbreviations.
@@ -129,6 +133,9 @@ const struct NamedCommand conf_commands[] = {
   {"CURSOR_EDGE_CAMERA_PANNING"    , 24},
   {"DELTA_TIME"                    , 25},
   {"CREATURE_STATUS_SIZE"          , 26},
+  {"LEVEL_START_ANGLE"             , 27},
+  {"POSSESS_AFFECT_CAMERA"         , 28},
+  {"ISOMETRIC_TILT"                , 29},
   {NULL,                   0},
   };
 
@@ -1087,16 +1094,88 @@ short load_configuration(void)
               features_enabled &= ~Ft_DeltaTime;
           break;
       case 26: // CREATURE_STATUS_SIZE
-          if (get_conf_parameter_single(buf,&pos,len,word_buf,sizeof(word_buf)) > 0)
-          {
-            i = atoi(word_buf);
-          }
           if ((i >= 0) && (i <= 32768)) {
               creature_status_size = i;
           } else {
               CONFWRNLOG("Couldn't recognize \"%s\" command parameter in %s file.",COMMAND_TEXT(cmd_num),config_textname);
           }
           break;
+      case 27: // LEVEL_START_ANGLE
+         if (get_conf_parameter_single(buf,&pos,len,word_buf,sizeof(word_buf)) > 0)
+          {
+            i = atoi(word_buf);
+          }
+          switch(i)
+          {
+            case 0:
+            {
+                LevelStartAngle = ANGLE_NORTH;
+                break;  
+            }
+            case 1: // North-east
+            {
+                // Value is already initialised; there is no need to write it again.
+                break;  
+            }
+            case 2:
+            {
+                LevelStartAngle = ANGLE_EAST;
+                break;  
+            }
+            case 3:
+            {
+                LevelStartAngle = ANGLE_SOUTHEAST;
+                break;  
+            }
+            case 4:
+            {
+                LevelStartAngle = ANGLE_SOUTH;
+                break;  
+            }
+            case 5:
+            {
+                LevelStartAngle = ANGLE_SOUTHWEST;
+                break;  
+            }
+            case 6:
+            {
+                LevelStartAngle = ANGLE_WEST;
+                break;  
+            }
+            case 7:
+            {
+                LevelStartAngle = ANGLE_NORTHWEST;
+                break;  
+            }
+            default:
+            {
+                CONFWRNLOG("Couldn't recognize \"%s\" command parameter in %s file.",
+                COMMAND_TEXT(cmd_num),config_textname);
+                break;
+            }            
+          }
+          break;
+       case 28: // POSSESS_AFFECT_CAMERA
+            i = recognize_conf_parameter(buf,&pos,len,logicval_type);
+            if (i <= 0)
+            {
+                CONFWRNLOG("Couldn't recognize \"%s\" command parameter in %s file.",
+                COMMAND_TEXT(cmd_num),config_textname);
+                PossessAffectCamera = true;
+                break;
+            }
+            if (i == 1)
+                PossessAffectCamera = true;
+            else
+                PossessAffectCamera = false;
+            break;
+        case 29: // ISOMETRIC_TILT
+        if (get_conf_parameter_single(buf,&pos,len,word_buf,sizeof(word_buf)) > 0)
+          {
+            i = atoi(word_buf);
+          }
+              IsometricTilt = i;
+        break;
       case 0: // comment
           break;
       case -1: // end of buffer

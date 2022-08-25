@@ -405,20 +405,24 @@ long pinstfm_control_creature(struct PlayerInfo *player, long *n)
     if (player->view_mode != PVM_FrontView)
     {
         view_zoom_camera_in(cam, 30000, 0);
-        // Compute new camera angle
-        long mv_a = (thing->move_angle_xy - cam->orient_a) & LbFPMath_AngleMask;
-        if (mv_a > LbFPMath_PI)
-          mv_a -= 2*LbFPMath_PI;
-        if (mv_a < -LbFPMath_PI/6)
+        long mv_a;
+        if (PossessAffectCamera)
         {
-            mv_a = -LbFPMath_PI/6;
-        } else
-        if (mv_a > LbFPMath_PI/6)
-        {
-            mv_a = LbFPMath_PI/6;
+            // Compute new camera angle
+            mv_a = (thing->move_angle_xy - cam->orient_a) & LbFPMath_AngleMask;
+            if (mv_a > LbFPMath_PI)
+            mv_a -= 2*LbFPMath_PI;
+            if (mv_a < -LbFPMath_PI/6)
+            {
+                mv_a = -LbFPMath_PI/6;
+            } else
+            if (mv_a > LbFPMath_PI/6)
+            {
+                mv_a = LbFPMath_PI/6;
+            }
+            cam->orient_a += mv_a;
+            cam->orient_a &= LbFPMath_AngleMask;
         }
-        cam->orient_a += mv_a;
-        cam->orient_a &= LbFPMath_AngleMask;
         thing = thing_get(player->influenced_thing_idx);
         // Now mv_a becomes a circle radius
         mv_a = get_creature_eye_height(thing) + thing->mappos.z.val;
@@ -685,17 +689,50 @@ long pinstfs_zoom_out_of_heart(struct PlayerInfo *player, long *n)
 
 long pinstfm_zoom_out_of_heart(struct PlayerInfo *player, long *n)
 {
+    struct Camera* cam = player->acamera;
     if (player->view_mode != PVM_FrontView)
     {
-        struct Camera* cam = player->acamera;
         struct Thing* thing = get_player_soul_container(player->id_number);
         long deltax;
         long deltay;
         unsigned long addval;
+        TbBool south = ((LevelStartAngle > ANGLE_EAST) && (LevelStartAngle < ANGLE_WEST));
+        TbBool anticlockwise = (south) ? (LevelStartAngle < ANGLE_SOUTH) : (LevelStartAngle >= ANGLE_WEST);
         if (cam != NULL)
         {
+          if (south)
+          {
+              if ((cam->orient_a > ANGLE_WEST) || (cam->orient_a < ANGLE_EAST))
+              {
+                cam->orient_a = ANGLE_SOUTH;
+              }
+          }
           cam->zoom -= (24000 - settings.isometric_view_zoom_level) / 16;
-          cam->orient_a += LbFPMath_PI/64;
+          if ((LevelStartAngle > ANGLE_NORTH) && (LevelStartAngle != ANGLE_SOUTH))
+          {
+            if (!south)
+            {
+                if (!anticlockwise)
+                {
+                    cam->orient_a += ((LbFPMath_PI/64) << (unsigned char)(LevelStartAngle > ANGLE_NORTHEAST));
+                }
+                else
+                {
+                    cam->orient_a -= ((LbFPMath_PI/64) << (unsigned char)(LevelStartAngle < ANGLE_NORTHWEST));
+                }
+            }
+            else
+            {
+                if (!anticlockwise)
+                {
+                    cam->orient_a += LbFPMath_PI/64;
+                }
+                else
+                {
+                    cam->orient_a -= LbFPMath_PI/64;
+                }
+            }
+          }
           addval = (thing->clipbox_size_yz >> 1);
           deltax = distance_with_angle_to_coord_x((long)thing->mappos.z.val+addval, cam->orient_a);
           deltay = distance_with_angle_to_coord_y((long)thing->mappos.z.val+addval, cam->orient_a);
@@ -712,6 +749,13 @@ long pinstfm_zoom_out_of_heart(struct PlayerInfo *player, long *n)
         dstcam->mappos.x.val = thing->mappos.x.val + deltax;
         dstcam->mappos.y.val = thing->mappos.y.val + deltay;
     }
+    else
+    {
+        if ((LevelStartAngle == ANGLE_EAST) || (LevelStartAngle == ANGLE_SOUTH) || (LevelStartAngle == ANGLE_WEST))
+        {
+            cam->orient_a = LevelStartAngle;
+        }
+    }
     if (player->instance_remain_rurns >= 8)
       LbPaletteFade(engine_palette, 8, Lb_PALETTE_FADE_OPEN);
     return 0;
@@ -724,7 +768,7 @@ long pinstfe_zoom_out_of_heart(struct PlayerInfo *player, long *n)
   if ((player->view_mode != PVM_FrontView) && (cam != NULL))
   {
     cam->zoom = settings.isometric_view_zoom_level;
-    cam->orient_a = LbFPMath_PI/4;
+    cam->orient_a = LevelStartAngle;
   }
   light_turn_light_on(player->field_460);
   player->allocflags &= ~PlaF_KeyboardInputDisabled;

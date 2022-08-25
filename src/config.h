@@ -182,6 +182,10 @@ extern unsigned short AtmosEnd;
 extern TbBool AssignCpuKeepers;
 
 extern unsigned int vid_scale_flags;
+
+extern unsigned short LevelStartAngle;
+extern TbBool PossessAffectCamera;
+extern int IsometricTilt;
 /******************************************************************************/
 DLLIMPORT extern float _DK_phase_of_moon;
 #define phase_of_moon _DK_phase_of_moon
