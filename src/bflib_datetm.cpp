@@ -151,8 +151,8 @@ TbClockMSec LbTimerClock_1024(void)
  */
 TbClockMSec LbTimerClock_any(void)
 {
-  long long clk = 500 * clock();
-  return (clk / CLOCKS_PER_SEC) << 1;
+  uint64_t clk = (uint64_t)clock() / (CLOCKS_PER_SEC / 1000);
+  return clk;
 }
 
 /** Fills structure with current time.
@@ -221,7 +221,7 @@ inline void LbDoMultitasking(void)
 #endif
 }
 
-TbBool __fastcall LbSleepFor(TbClockMSec delay)
+TbBool LbSleepFor(TbClockMSec delay)
 {
     TbClockMSec currclk = LbTimerClock();
     TbClockMSec endclk = currclk + delay;
@@ -235,7 +235,7 @@ TbBool __fastcall LbSleepFor(TbClockMSec delay)
   return true;
 }
 
-TbBool __fastcall LbSleepUntil(TbClockMSec endtime)
+TbBool LbSleepUntil(TbClockMSec endtime)
 {
     TbClockMSec currclk = LbTimerClock();
     while ((currclk + LARGE_DELAY_TIME) < endtime)

@@ -58,7 +58,7 @@ TbError CompleteTwoPlayerExchange(void *buf);
 TbError CompleteMultiPlayerExchange(void *buf);
 TbError HostDataCollection(void);
 TbError HostDataBroadcast(void);
-void __stdcall GetCurrentPlayersCallback(struct TbNetworkCallbackData *netcdat, void *a2);
+void GetCurrentPlayersCallback(struct TbNetworkCallbackData *netcdat, void *a2);
 void *MultiPlayerCallback(unsigned long a1, unsigned long a2, unsigned long a3, void *a4);
 void MultiPlayerReqExDataMsgCallback(unsigned long a1, unsigned long a2, void *a3);
 void AddMsgCallback(unsigned long, char *, void *);
@@ -621,11 +621,9 @@ void LbNetwork_InitSessionsFromCmdLine(const char * str)
 
 TbError LbNetwork_Init(unsigned long srvcindex, unsigned long maxplayrs, void *exchng_buf, unsigned long exchng_size, struct TbNetworkPlayerInfo *locplayr, struct ServiceInitData *init_data)
 {
-  TbError res;
+  TbError res = Lb_FAIL;
+#ifndef KEEPERFX_DISABLE_MULTIPLAYER
   NetUserId usr;
-
-  res = Lb_FAIL;
-
   localPlayerInfoPtr = locplayr; //TODO NET try to get rid of dependency on external player list, makes things 2x more complicated
 
   /*
@@ -736,6 +734,7 @@ TbError LbNetwork_Init(unsigned long srvcindex, unsigned long maxplayrs, void *e
   }
 
   //_wint_thread_data = thread_data_mem;
+#endif
   return res;
 }
 
@@ -1443,7 +1442,7 @@ TbError GetCurrentPlayers(void)
   return Lb_OK;
 }
 
-void __stdcall GetCurrentPlayersCallback(struct TbNetworkCallbackData *netcdat, void *a2)
+void GetCurrentPlayersCallback(struct TbNetworkCallbackData *netcdat, void *a2)
 {
   AddAPlayer((struct TbNetworkPlayerNameEntry *)netcdat);
 }
@@ -1622,6 +1621,9 @@ TbError GenericIPXInit(void *init_data)
 
 TbError GenericTCPInit(void *init_data)
 {
+#ifdef KEEPERFX_DISABLE_MULTIPLAYER
+    return Lb_FAIL;
+#else
     if (spPtr != NULL) {
         spPtr->Release();
         delete spPtr;
@@ -1639,6 +1641,7 @@ TbError GenericTCPInit(void *init_data)
     }
 
   return Lb_OK;
+#endif
 }
 
 TbError SendRequestCompositeExchangeDataMsg(const char *func_name)

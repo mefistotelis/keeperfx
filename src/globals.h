@@ -70,6 +70,12 @@ extern "C" {
 
 // Basic Definitions
 
+#if defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
+#define _64_BIT_
+#else
+#define _32_BIT_
+#endif
+
 #if defined(unix) && !defined (GO32)
 #define SEPARATOR "/"
 #else

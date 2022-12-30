@@ -157,10 +157,6 @@ char field_3C4[12];
 
 typedef void (*SmackDrawCallback)(unsigned char *frame_data, long width, long height);
 
-/******************************************************************************/
-
-
-
 #pragma pack()
 /******************************************************************************/
 // Exported functions - SMK related

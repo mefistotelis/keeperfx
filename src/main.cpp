@@ -12,8 +12,11 @@
  */
 /******************************************************************************/
 #include "pre_inc.h"
+
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
 
 #include "keeperfx.hpp"
 
@@ -1043,7 +1046,6 @@ short setup_game(void)
 {
   struct CPU_INFO cpu_info; // CPU status variable
   short result;
-  OSVERSIONINFO v;
   // Do only a very basic setup
   cpu_detect(&cpu_info);
   SYNCMSG("CPU %s type %d family %d model %d stepping %d features %08x",cpu_info.vendor,
@@ -1053,11 +1055,14 @@ short setup_game(void)
   {
       SYNCMSG("%s", &cpu_info.brand[0]);
   }
+#ifdef _WIN32
+  OSVERSIONINFO v;
   v.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   if (GetVersionEx(&v))
   {
       SYNCMSG("Operating System: %s %ld.%ld.%ld", (v.dwPlatformId == VER_PLATFORM_WIN32_NT) ? "Windows NT" : "Windows", v.dwMajorVersion,v.dwMinorVersion,v.dwBuildNumber);
   }
+#endif
   update_memory_constraits();
   // Enable features that require more resources
   update_features(mem_size);
@@ -4224,6 +4229,7 @@ int LbBullfrogMain(unsigned short argc, char *argv[])
     return 0;
 }
 
+#ifdef _WIN32
 void get_cmdln_args(unsigned short &argc, char *argv[])
 {
     char *ptr;
@@ -4278,13 +4284,19 @@ LONG __stdcall Vex_handler(
     LbCloseLog();
     return 0;
 }
+#endif
 
 int main(int argc, char *argv[])
 {
   char *text;
-
+#ifdef _WIN32
   AddVectoredExceptionHandler(0, &Vex_handler);
   get_cmdln_args(bf_argc, bf_argv);
+#else
+  bf_argc = min(CMDLN_MAXLEN, argc);
+  for (int i = 0; i < bf_argc; i++)
+    bf_argv[i] = argv[i];
+#endif
 
   try {
   LbBullfrogMain(bf_argc, bf_argv);

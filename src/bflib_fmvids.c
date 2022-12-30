@@ -17,13 +17,17 @@
  *     (at your option) any later version.
  */
 /******************************************************************************/
+
 #include "pre_inc.h"
 #include "bflib_fmvids.h"
+
+#ifdef _WIN32
 
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
+
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -1509,4 +1513,13 @@ short anim_record(void)
 /******************************************************************************/
 #ifdef __cplusplus
 }
+#endif
+
+#else
+
+short anim_record() { return 0; }
+short anim_stop() { return 0; }
+TbBool anim_record_frame(unsigned char *screenbuf, unsigned char *palette) { return false; }
+short play_smk_(char *fname, int smkflags, int plyflags) { return 0; }
+
 #endif

@@ -20,7 +20,12 @@
 #ifndef BFLIB_BASICS_H
 #define BFLIB_BASICS_H
 
+#ifdef _WIN32
 #include <io.h>
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -84,7 +89,11 @@ typedef time_t TbTimeSec;
 typedef unsigned char TbChecksum;
 typedef unsigned long TbBigChecksum;
 typedef long Offset;
+#ifdef _WIN32
 typedef int TbFileHandle;
+#else
+typedef FILE* TbFileHandle;
+#endif
 typedef unsigned char TbBool;
 typedef short TbScreenPos;
 
@@ -97,8 +106,16 @@ struct TbFileFind {
           struct TbTime CreationTime;
           struct TbDate LastWriteDate;
           struct TbTime LastWriteTime;
+#ifdef _WIN32
           unsigned long ReservedHandle;
           struct _finddata_t Reserved;
+#else
+          void* ReservedHandle;
+          long ReservedIndex;
+          long ReservedCount;
+          char* ReservedDirname;
+          char* ReservedPattern;
+#endif
 };
 
 #define LOG_PREFIX_LEN 32
@@ -158,7 +175,7 @@ int LbLogSetPrefixFmt(struct TbLog *log, const char *format, ...);
 
 void LbCloseLog();
 /******************************************************************************/
-typedef void (__stdcall *TbNetworkCallbackFunc)(struct TbNetworkCallbackData *, void *);
+typedef void (*TbNetworkCallbackFunc)(struct TbNetworkCallbackData *, void *);
 /******************************************************************************/
 unsigned long blong (unsigned char *p);
 unsigned long llong (unsigned char *p);

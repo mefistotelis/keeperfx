@@ -70,21 +70,27 @@ WINBASEAPI BOOL WINAPI CloseHandle(HANDLE);
 
 LbSemaphore::LbSemaphore(void)
 {
+#ifdef _WIN32
   this->sHandle = CreateSemaphoreA(NULL, 1, 1, NULL);
+#endif
 }
 
 LbSemaphore::~LbSemaphore(void)
 {
+#ifdef _WIN32
   CloseHandle(this->sHandle);
+#endif
 }
 
 /******************************************************************************/
 
 LbSemaLock::LbSemaLock(class LbSemaphore *sem, int a2)
 {
-  this->sHandle = sem->sHandle;
   this->field_4 = a2;
   this->field_8 = 0;
+#ifndef _WIN32
+  this->semaphore = sem;
+#endif
 }
 
 LbSemaLock::~LbSemaLock(void)
@@ -98,7 +104,11 @@ void LbSemaLock::Release(void)
   {
     if ( !this->field_8 )
     {
+#ifdef _WIN32
       ReleaseSemaphore(this->sHandle, 1, 0);
+#else
+      this->sHandle = {};
+#endif
       this->field_4 = 0;
     }
   }
@@ -108,11 +118,21 @@ int LbSemaLock::Lock(TbBool wait_forever)
 {
   if (wait_forever)
   {
+#ifdef _WIN32
     this->field_4 = WaitForSingleObject(this->sHandle, INFINITE) < 1;
+#else
+    this->sHandle = std::unique_lock<std::timed_mutex>(this->semaphore->sHandle);
+    this->field_4 = this->sHandle.owns_lock() ? 1 : 0;
+#endif
     return this->field_4;
   } else
   {
+#ifdef _WIN32
     this->field_4 = WaitForSingleObject(this->sHandle, 5) < 1;
+#else
+    this->sHandle = std::unique_lock<std::timed_mutex>(this->semaphore->sHandle, std::chrono::milliseconds(5));
+    this->field_4 = this->sHandle.owns_lock() ? 1 : 0;
+#endif
     return this->field_4;
   }
 }
