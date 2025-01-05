@@ -1811,6 +1811,11 @@ TbBool creature_would_benefit_from_healing(const struct Thing* thing)
     return false;
 }
 
+TbBool creature_would_benefit_from_cleansing(const struct Thing* thing)
+{
+    return creature_is_debuffed(thing);
+}
+
 /**
  * @brief Get suitable spell for the caster itself.
  * @param thing The creature to use spell.
@@ -3505,6 +3510,21 @@ long project_creature_attack_target_damage(const struct Thing *firing, const str
     long dexterity = calculate_correct_creature_dexterity(firing);
     damage = project_damage_of_melee_shot(dexterity, damage, target);
     return damage;
+}
+
+TbBool creature_requires_cleansing(const struct Thing* thing)
+{
+    return creature_is_debuffed(thing);
+}
+
+TbBool creature_is_debuffed(const struct Thing* thing) 
+{
+    for (int i = 0; i < game.conf.magic_conf.debuff_count; ++i) {
+        if (creature_affected_by_spell(thing, game.conf.magic_conf.debuffs[i])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 /******************************************************************************/
