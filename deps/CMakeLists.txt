@@ -32,7 +32,13 @@ target_include_directories(findfirst INTERFACE "findfirst")
 target_link_libraries(keeperfx PUBLIC findfirst)
 
 ## libbcrypt
-add_library(bcrypt OBJECT "libbcrypt/bcrypt.c" "libbcrypt/crypt_blowfish/crypt_gensalt.c" "libbcrypt/crypt_blowfish/crypt_blowfish.c" "libbcrypt/crypt_blowfish/wrapper.c" "$<IF:$<OR:$<STREQUAL:$<LOWER_CASE:${CMAKE_SYSTEM_PROCESSOR}>,i686>,$<STREQUAL:$<LOWER_CASE:${CMAKE_SYSTEM_PROCESSOR}>,i386>>,libbcrypt/crypt_blowfish/x86.S,>")
+set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${CMAKE_C_FLAGS}")
+add_library(bcrypt OBJECT STATIC
+	"$<IF:$<STREQUAL:$<LOWER_CASE:${CMAKE_SYSTEM_PROCESSOR}>,i686>,libbcrypt/crypt_blowfish/x86.S,>"
+        "libbcrypt/bcrypt.c" 
+	"libbcrypt/crypt_blowfish/crypt_gensalt.c" 
+	"libbcrypt/crypt_blowfish/crypt_blowfish.c" 
+	"libbcrypt/crypt_blowfish/wrapper.c")
 target_include_directories(bcrypt INTERFACE "libbcrypt")
-target_link_libraries(keeperfx PUBLIC bcrypt)
-
+target_link_options(bcrypt PRIVATE "$<IF:$<STREQUAL:$<LOWER_CASE:${CMAKE_SYSTEM_PROCESSOR}>,i686>,-m32,>")
+target_link_libraries(keeperfx PRIVATE bcrypt)
