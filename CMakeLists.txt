@@ -5,7 +5,7 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "Do not build in the root. Create a bin directory and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif ()
 
-project(keeperfx LANGUAGES C CXX)
+project(keeperfx LANGUAGES C CXX ASM)
 
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_CXX_STANDARD 26)
