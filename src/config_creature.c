@@ -436,6 +436,10 @@ void init_creature_model_stats(void)
         crstat->prison_kind = 0;
         crstat->torture_kind = 0;
         crstat->immunity_flags = 0;
+        for (n = 0; n < CREATURE_TYPES_MAX; n++)
+        {
+            crstat->hostile_towards[n] = 0;
+        }
         crconf->namestr_idx = 0;
         crconf->model_flags = 0;
         // Attraction block.
@@ -2203,7 +2207,7 @@ CreatureJob get_job_for_subtile(const struct Thing *creatng, MapSubtlCoord stl_x
     }
     if (creatng->owner == slabmap_owner(slb))
     {
-        if (thing_is_creature_digger(creatng)) 
+        if (thing_is_creature_digger(creatng))
         {
             if (creature_is_for_dungeon_diggers_list(creatng))
             {
